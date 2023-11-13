@@ -56,10 +56,10 @@ manual_split:
 
 split_to_use: manual_split
 
-epochs: 3
+epochs: 5
 init_rand_seed: 0
 train_loader:
-  batch_size: 2
+  batch_size: 64
 validation_loader:
-  batch_size: 1
+  batch_size: 64
 output_folder: ./ckpt/
