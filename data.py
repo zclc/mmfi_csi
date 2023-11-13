@@ -1,3 +1,4 @@
+import datetime
 import os
 import argparse
 import sys
@@ -9,11 +10,13 @@ import torch
 from mmfi_lib.mmfi import make_dataset, make_dataloader
 from mmfi_lib.evaluate import calulate_error
 
+import datetime
+
 from model import resnet34
 import torch.optim as optim
 from tqdm import tqdm
 from mmfi_lib.evaluate import calulate_error
-
+from torch.utils.tensorboard import SummaryWriter
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Code implementation with MMFi dataset and library")
@@ -21,6 +24,8 @@ if __name__ == '__main__':
     parser.add_argument("config_file", type=str, help="Configuration YAML file")
     args = parser.parse_args()
 
+    log_dir_name = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    tb_writer = SummaryWriter(log_dir=log_dir_name)
     dataset_root = args.dataset_root
     with open(args.config_file, 'r') as fd:
         config = yaml.load(fd, Loader=yaml.FullLoader)
@@ -36,8 +41,6 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # device = 'cpu'
     print(f'using {device} device!')
-
-    torch.backends.cudnn.enabled = False
 
     net = resnet34()
     net.to(device)
@@ -89,12 +92,14 @@ if __name__ == '__main__':
                 val_features = batch_data['input_wifi-csi']
                 val_labels = batch_data['output']
                 predict_y = net(val_features.to(device))
-                mpjpe, pamjpe = calulate_error(predict_y, val_labels)
+                mpjpe, pamjpe = calulate_error(predict_y, val_labels.to(device))
                 acc_mpjpe += mpjpe
 
         val_mpjpe = acc_mpjpe / val_num
         print('[epoch %d] train_loss: %.3f  val_accuracy: %.3f' %
               (epoch + 1, running_loss / train_num, val_mpjpe))
 
-    print('Finished Training')
+        tb_writer.add_scalar('train_loss', running_loss / train_num, epoch + 1)
+        tb_writer.add_scalar('MPJPE', mpjpe, epoch + 1)
 
+    print('Finished Training')
