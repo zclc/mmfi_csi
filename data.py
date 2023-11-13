@@ -92,7 +92,7 @@ if __name__ == '__main__':
                 val_features = batch_data['input_wifi-csi']
                 val_labels = batch_data['output']
                 predict_y = net(val_features.to(device))
-                mpjpe, pamjpe = calulate_error(predict_y, val_labels.to(device))
+                mpjpe = calulate_error(predict_y, val_labels.to(device))
                 acc_mpjpe += mpjpe
 
         val_mpjpe = acc_mpjpe / val_num
