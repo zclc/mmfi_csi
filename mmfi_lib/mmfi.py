@@ -329,7 +329,7 @@ class MMFi_Dataset(Dataset):
                     raise ValueError('{} is not a file!'.format(data_path))
         else:
             raise ValueError('Unsupport data unit!')
-        return sample
+        return sample # inputwificsi=[1,136,136] output = [17,3]
 
 
 def make_dataset(dataset_root, config):
@@ -354,7 +354,7 @@ def collate_fn_padd(batch):
     _output = [np.array(sample['output']) for sample in batch]
     _output = torch.FloatTensor(np.array(_output))
     _output = torch.unsqueeze(_output, dim=1)
-    batch_data['output'] = _output
+    batch_data['output'] = _output # output = [1 1 17 3]
 
     for mod in batch_data['modality']:
         if mod in ['mmwave', 'lidar']:
@@ -365,7 +365,7 @@ def collate_fn_padd(batch):
         else:
             _input = [np.array(sample['input_' + mod]) for sample in batch]
             _input = torch.FloatTensor(np.array(_input))
-            batch_data['input_' + mod] = _input
+            batch_data['input_' + mod] = _input #[1, 1, 136, 136]
 
     return batch_data
 

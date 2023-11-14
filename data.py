@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from mmfi_lib.mmfi import make_dataset, make_dataloader
-from mmfi_lib.evaluate import calulate_error
+from mmfi_lib.evaluate import cal_mpjpe
 
 import datetime
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     log_dir_name = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
-    tb_writer = SummaryWriter(log_dir=log_dir_name)
+    tb_writer = SummaryWriter(log_dir=os.path.join('logs', log_dir_name))
     dataset_root = args.dataset_root
     with open(args.config_file, 'r') as fd:
         config = yaml.load(fd, Loader=yaml.FullLoader)
@@ -38,7 +38,10 @@ if __name__ == '__main__':
 
     # TODO: Settings, e.g., your model, optimizer, device, ...
     # [17,3] [17, 3]
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    if config['device'] == 'cpu':
+        device = 'cpu'
+    else:
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # device = 'cpu'
     print(f'using {device} device!')
 
@@ -70,10 +73,10 @@ if __name__ == '__main__':
         # train_bar = tqdm(train_loader, file=sys.stdout)
         train_num = len(train_loader)
         for batch_idx, batch_data in enumerate(train_loader):
-            features = batch_data['input_wifi-csi']
-            labels = batch_data['output']
+            features = batch_data['input_wifi-csi']  # [1, 1, 136, 136]
+            labels = batch_data['output']  # [1, 1, 17, 3]
             optimizer.zero_grad()
-            preds = net(features.to(device))
+            preds = net(features.to(device))  # [1,1,17,3]
             loss = loss_function(preds.to(device), labels.to(device))
             loss.backward()
             optimizer.step()
@@ -92,7 +95,7 @@ if __name__ == '__main__':
                 val_features = batch_data['input_wifi-csi']
                 val_labels = batch_data['output']
                 predict_y = net(val_features.to(device))
-                mpjpe = calulate_error(predict_y, val_labels.to(device))
+                mpjpe = cal_mpjpe(predict_y, val_labels.to(device))
                 acc_mpjpe += mpjpe
 
         val_mpjpe = acc_mpjpe / val_num

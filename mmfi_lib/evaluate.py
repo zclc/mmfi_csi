@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 
 
 def compute_similarity_transform(X, Y, compute_optimal_scale=False):
@@ -86,7 +86,18 @@ def calulate_error(preds, gts):
 
     return mpjpe, pampjpe
 
+def cal_mpjpe(pred, gt):
+    """
+    Calculate the mean per joint position error (MPJPE) between predicted and ground truth 3D human pose.
 
+    Args:
+        pred (torch.Tensor): Predicted 3D human pose tensor of shape (N, C, J, 3).
+        gt (torch.Tensor): Ground truth 3D human pose tensor of shape (N, C, J, 3).
+
+    Returns:
+        float: Mean per joint position error (MPJPE).
+    """
+    return torch.sqrt(((pred - gt) ** 2).sum(dim=3)).mean()
 
 
 
