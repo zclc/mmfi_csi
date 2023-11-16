@@ -63,4 +63,5 @@ train_loader:
   batch_size: 1
 validation_loader:
   batch_size: 1
+
 output_folder: ./ckpt/

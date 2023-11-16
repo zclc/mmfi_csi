@@ -86,7 +86,7 @@ def calulate_error(preds, gts):
 
     return mpjpe, pampjpe
 
-def cal_mpjpe(pred, gt):
+def cal_mpjpe(preds, gts):
     """
     Calculate the mean per joint position error (MPJPE) between predicted and ground truth 3D human pose.
 
@@ -97,7 +97,9 @@ def cal_mpjpe(pred, gt):
     Returns:
         float: Mean per joint position error (MPJPE).
     """
-    return torch.sqrt(((pred - gt) ** 2).sum(dim=3)).mean()
+    # return torch.sqrt(((preds - gts) ** 2).sum(dim=3)).mean()
 
+    mpjpe = np.mean(np.sqrt(np.sum(np.square(preds - gts), axis=2)))
+    return mpjpe
 
 
