@@ -7,6 +7,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 
+
 def decode_config(config):
     all_subjects = ['S01', 'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S09', 'S10', 'S11', 'S12', 'S13', 'S14',
                     'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S21', 'S22', 'S23', 'S24', 'S25', 'S26', 'S27', 'S28',
@@ -283,8 +284,8 @@ class MMFi_Dataset(Dataset):
             data = torch.cat((data2[0, :, :], data2[1, :, :], data2[2, :, :]), dim=1)
             data = torch.unsqueeze(data, dim=0)
             data = torch.unsqueeze(data, dim=0)
-            data = F.interpolate(data, size=(136, 136), mode='bilinear') # (1,1,136,136)
-            data = torch.squeeze(data, dim=0) # (1,136,136)
+            data = F.interpolate(data, size=(136, 136), mode='bilinear')  # (1,1,136,136)
+            data = torch.squeeze(data, dim=0)  # (1,136,136)
         else:
             raise ValueError('Found unseen modality in this dataset.')
         return data
@@ -329,7 +330,7 @@ class MMFi_Dataset(Dataset):
                     raise ValueError('{} is not a file!'.format(data_path))
         else:
             raise ValueError('Unsupport data unit!')
-        return sample # inputwificsi=[1,136,136] output = [17,3]
+        return sample  # inputwificsi=[1,136,136] output = [17,3]
 
 
 def make_dataset(dataset_root, config):
@@ -354,7 +355,7 @@ def collate_fn_padd(batch):
     _output = [np.array(sample['output']) for sample in batch]
     _output = torch.FloatTensor(np.array(_output))
     _output = torch.unsqueeze(_output, dim=1)
-    batch_data['output'] = _output # output = [1 1 17 3]
+    batch_data['output'] = _output  # output = [1 1 17 3]
 
     for mod in batch_data['modality']:
         if mod in ['mmwave', 'lidar']:
@@ -365,7 +366,7 @@ def collate_fn_padd(batch):
         else:
             _input = [np.array(sample['input_' + mod]) for sample in batch]
             _input = torch.FloatTensor(np.array(_input))
-            batch_data['input_' + mod] = _input #[1, 1, 136, 136]
+            batch_data['input_' + mod] = _input  # [1, 1, 136, 136]
 
     return batch_data
 

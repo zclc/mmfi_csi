@@ -44,7 +44,7 @@ if __name__ == '__main__':
     else:
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(f'using {device} device!')
-    torch.backends.cudnn.enabled = False
+    # torch.backends.cudnn.enabled = False
 
     net = resnet34()
     net.to(device)
@@ -155,7 +155,8 @@ if __name__ == '__main__':
         tb_writer.add_scalar('train_loss', running_loss / train_num, epoch + 1)
         tb_writer.add_scalar('MPJPE', val_mpjpe, epoch + 1)
         tb_writer.add_scalar('PA_MPJPE', val_pampjpe, epoch + 1)
-
+        tb_writer.add_scalar('EPOCH_TRAIN_TIME', train_cost_s, epoch + 1)
+        tb_writer.add_scalar('EPOCH_EVAL_TIME', val_cost_s, epoch + 1)
     pro_end_dt = datetime.datetime.now()
     pro_cost = pro_end_dt - pro_start_dt
     pro_cost_s = pro_cost.seconds
