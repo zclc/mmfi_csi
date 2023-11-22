@@ -25,8 +25,8 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
     X0 = X - muX
     Y0 = Y - muY
 
-    ssX = (X0**2.).sum()
-    ssY = (Y0**2.).sum()
+    ssX = (X0 ** 2.).sum()
+    ssY = (Y0 ** 2.).sum()
 
     # centred Frobenius norm
     normX = np.sqrt(ssX)
@@ -38,28 +38,28 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
 
     # optimum rotation matrix of Y
     A = np.dot(X0.T, Y0)
-    U,s,Vt = np.linalg.svd(A,full_matrices=False)
+    U, s, Vt = np.linalg.svd(A, full_matrices=False)
     V = Vt.T
     T = np.dot(V, U.T)
 
     # Make sure we have a rotation
     detT = np.linalg.det(T)
-    V[:,-1] *= np.sign( detT )
-    s[-1]   *= np.sign( detT )
+    V[:, -1] *= np.sign(detT)
+    s[-1] *= np.sign(detT)
     T = np.dot(V, U.T)
 
     traceTA = s.sum()
 
     if compute_optimal_scale:  # Compute optimum scaling of Y.
         b = traceTA * normX / normY
-        d = 1 - traceTA**2
-        Z = normX*traceTA*np.dot(Y0, T) + muX
+        d = 1 - traceTA ** 2
+        Z = normX * traceTA * np.dot(Y0, T) + muX
     else:  # If no scaling allowed
         b = 1
-        d = 1 + ssY/ssX - 2 * traceTA * normY / normX
-        Z = normY*np.dot(Y0, T) + muX
+        d = 1 + ssY / ssX - 2 * traceTA * normY / normX
+        Z = normY * np.dot(Y0, T) + muX
 
-    c = muX - b*np.dot(muY, T)
+    c = muX - b * np.dot(muY, T)
 
     return d, Z, T, b, c
 
@@ -69,15 +69,17 @@ def calulate_error(preds, gts):
     Compute MPJPE and PA-MPJPE given predictions and ground-truths.
     """
     N = preds.shape[0]
-    num_joints = preds.shape[1]
+    num_joints = preds.shape[2]
 
-    mpjpe = np.mean(np.sqrt(np.sum(np.square(preds - gts), axis=2)))
+    mpjpe = np.mean(np.sqrt(np.sum(np.square(preds - gts), axis=3)))
 
     pampjpe = np.zeros([N, num_joints])
 
     for n in range(N):
         frame_pred = preds[n]
         frame_gt = gts[n]
+        frame_gt = frame_gt.squeeze()
+        frame_pred = frame_pred.squeeze()
         _, Z, T, b, c = compute_similarity_transform(frame_gt, frame_pred, compute_optimal_scale=True)
         frame_pred = (b * frame_pred.dot(T)) + c
         pampjpe[n] = np.sqrt(np.sum(np.square(frame_pred - frame_gt), axis=1))
@@ -85,6 +87,7 @@ def calulate_error(preds, gts):
     pampjpe = np.mean(pampjpe)
 
     return mpjpe, pampjpe
+
 
 def cal_mpjpe(preds, gts):
     """
@@ -97,9 +100,7 @@ def cal_mpjpe(preds, gts):
     Returns:
         float: Mean per joint position error (MPJPE).
     """
-    # return torch.sqrt(((preds - gts) ** 2).sum(dim=3)).mean()
+    return torch.sqrt(((preds - gts) ** 2).sum(dim=3)).mean()
 
-    mpjpe = np.mean(np.sqrt(np.sum(np.square(preds - gts), axis=2)))
-    return mpjpe
-
-
+    # mpjpe = np.mean(np.sqrt(np.sum(np.square(preds - gts), axis=2)))
+    # return mpjpe

@@ -33,14 +33,26 @@ def mpjpe(pred, gt):
     Returns:
         float: Mean per joint position error (MPJPE).
     """
-    return torch.sqrt(((pred - gt) ** 2).sum(dim=3)).mean()
+    return torch.sqrt(((pred - gt) ** 2).sum(dim=2)).mean()
+
+
+def test_mse(pred, gt):
+    lossf = torch.nn.MSELoss()
+    loss = lossf(pred, gt)
+    return loss.item()
 
 
 if __name__ == '__main__':
-    pred1 = torch.tensor([[[0, 0, 0], [1, 1, 1], [2, 2, 2]], [[3, 3, 3], [4, 4, 4], [5, 5, 5]]], dtype=torch.float32)
-    truth1 = torch.tensor([[[1, 0, 0], [1, 2, 2], [2, 4, 2]], [[4, 3, 3], [4, 5, 5], [5, 6, 7]]], dtype=torch.float32)
-    print(pred1.shape, truth1.shape)
-    pred1 = torch.unsqueeze(pred1, dim=1)
-    truth1 = torch.unsqueeze(truth1, dim=1)
-    print(pred1.shape, truth1.shape)
+    # pred1 = torch.tensor([[[0, 0, 0], [1, 1, 1], [2, 2, 2]], [[3, 3, 3], [4, 4, 4], [5, 5, 5]]], dtype=torch.float32)
+    # truth1 = torch.tensor([[[1, 0, 0], [1, 2, 2], [2, 4, 2]], [[4, 3, 3], [4, 5, 5], [5, 6, 7]]], dtype=torch.float32)
+    # print(pred1.shape, truth1.shape)
+    # pred1 = torch.unsqueeze(pred1, dim=1)
+    # truth1 = torch.unsqueeze(truth1, dim=1)
+    # print(pred1.shape, truth1.shape)
+    # print(mpjpe(pred1, truth1))
+
+    pred1 = torch.tensor([[[1, 1, 3], [3, 4, 5]], [[2, 3, 3], [4, 4, 5]]], dtype=torch.float32)
+    truth1 = torch.tensor([[[2, 2, 2], [3, 3, 3]], [[3, 3, 3], [4, 4, 4]]], dtype=torch.float32)
+    print(test_mse(pred1, truth1))
+
     print(mpjpe(pred1, truth1))
