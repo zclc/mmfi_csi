@@ -78,7 +78,8 @@ if __name__ == '__main__':
         train_bar = tqdm(train_loader, file=sys.stdout, leave=False)
         train_num = len(train_loader)
         for batch_idx, batch_data in enumerate(train_bar):
-            features = batch_data['input_wifi-csi']  # [bs, 1, 136, 136]
+            #features = batch_data['input_wifi-csi']  # [bs, 1, 136, 136]
+            features = batch_data['input_mmwave']
             labels = batch_data['output']  # [bs, 1, 17, 3]
             optimizer.zero_grad()
             preds = net(features.to(device))  # [bs,1,17,3]
