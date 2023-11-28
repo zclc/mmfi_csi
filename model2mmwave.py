@@ -150,13 +150,13 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        x = self.conv1(x)  # input(32,1,136,136) output(32,64,136,136)
-        x = self.bn1(x)  # input(32,64,136,136)
+        x = self.conv1(x)  # input(32,5,8,8) output(32,64,8,8)
+        x = self.bn1(x)  # input(32,64,8,8)
         x = self.relu(x)
         # x = self.maxpool(x)
 
-        x = self.layer1(x)  # input(32,64,136,136) output(32,64,136,136)
-        x = self.layer2(x)  # input(32,64,136,136) output(32,128,68,68)
+        x = self.layer1(x)  # input(32,64,8,8) output(32,64,8,8)
+        x = self.layer2(x)  # input(32,64,8,8) output(32,128,8,8)
         x = self.layer3(x)  # input(32,128,68,68) output(32,256,34,34)
         x = self.layer4(x)  # input(32,256,34,34) output(32,512,17,17)
 
@@ -168,14 +168,14 @@ class ResNet(nn.Module):
         x = self.layerB(x)  # input(32,512,17,17) output(32,3,17,17)
         x = self.avgpool2(x)  # input(32,3,17,17) output(32,3,17,1)
         # x = torch.squeeze(x)  # input(32,3,17,1) output(32,1,17,3)
-        x = torch.permute(x, (0, 3, 2, 1))
-
+        x = torch.permute(x, (0, 3, 2, 1))  # output(32,17,3)
         return x
 
 
 def resnet34(num_classes=1000, include_top=True):
     # https://download.pytorch.org/models/resnet34-333f7ec4.pth
     return ResNet(BasicBlock, [3, 4, 6, 3], num_classes=num_classes, include_top=include_top)
+
 
 
 def resnet50(num_classes=1000, include_top=True):
@@ -214,23 +214,29 @@ class MMWaveNet(nn.Module):
     def __init__(self):
         super(MMWaveNet, self).__init__()
         # 卷积层 卷积核个数 16 卷积核大小5*5 输出宽度 = （输入宽度-卷积核大小 + 2*pading)/步长 + 1
+        self.dropout1 = nn.Dropout(p=0.3)
+        self.conv1 = nn.Conv2d(5, 16, 3)  # input(5,8,8) output(16, 6, 6)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.dropout2 = nn.Dropout(p=0.3)
+        self.conv2 = nn.Conv2d(16, 32, 3)  # input(16, 6, 6) output(32, 4, 4)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(32*4*4, 512)
+        self.dropout3 = nn.Dropout(0.4)
+        self.fc2 = nn.Linear(512, 51)
+        self.dropout4 = nn.Dropout(0.4)
 
-        self.conv1 = nn.Conv2d(5, 16, 5)  # input(5,8,8) output(16, 8, 8)
-        # 下采样层 只改变高宽
-        self.pool1 = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 32, 5)  # input(16,8,8) output(32,8,8)
-        self.pool2 = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(32 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))  # (3,32,32) => output(16,28,28)
-        x = self.pool1(x)  # output(16,14,14)
-        x = F.relu(self.conv2(x))  # output(32,10,10)
-        x = self.pool2(x)  # output(32,5,5)
-        x = x.view(-1, 32 * 5 * 5)  # output32*5*5
-        x = F.relu(self.fc1(x))  # output120
-        x = F.relu(self.fc2(x))  # output84
-        x = self.fc3(x)  # output10
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.flatten(x)
+        x = self.dropout3(x)
+        x = self.fc1(x)
+        x = self.dropout4(x)
+        x = self.fc2(x)
+        x = torch.reshape(x, (-1, 1, 17, 3))
+
         return x

@@ -57,5 +57,33 @@ def main4():
     print(b)
 
 
+def main5():
+    a = torch.arange(12).reshape(1, 12)
+    print(a)
+    a = torch.reshape(a, (-1, 2, 3))
+    print(a.size())
+
+
+def main6():
+    import torch
+
+    tensor_list = [torch.tensor([1, 2, 3]), torch.tensor([4, 5, 6])]
+    print(tensor_list)
+    # Stack tensors in the list along the first dimension
+    stacked_tensor = torch.stack(tensor_list, dim=0)
+
+    print(stacked_tensor)
+
+
+def main7():
+    import torch
+    a = torch.arange(18).reshape(9, 2)
+    print(a)
+
+    b = torch.reshape(a, (3, 3, 2))
+    print(b)
+    c = torch.permute(b, (2, 1, 0))
+    print(c)
+
 if __name__ == '__main__':
-    main1()
+    main7()

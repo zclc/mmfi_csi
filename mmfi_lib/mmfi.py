@@ -345,7 +345,6 @@ def collate_fn_padd(batch):
     '''
     Padds batch of variable length
     '''
-
     batch_data = {'modality': batch[0]['modality'],
                   'scene': [sample['scene'] for sample in batch],
                   'subject': [sample['subject'] for sample in batch],
@@ -359,9 +358,16 @@ def collate_fn_padd(batch):
 
     for mod in batch_data['modality']:
         if mod in ['mmwave', 'lidar']:
-            _input = [torch.Tensor(sample['input_' + mod]) for sample in batch]
-            _input = torch.nn.utils.rnn.pad_sequence(_input)
-            _input = _input.permute(1, 0, 2)
+            _input = [torch.unsqueeze(torch.unsqueeze(torch.tensor(sample['input_' + mod], dtype=torch.float32), 0), 0) for sample in batch]
+            # _input = torch.nn.utils.rnn.pad_sequence(_input)
+            _input = [F.interpolate(data, size=(64, 5), mode='bilinear') for data in _input]
+            _input = torch.stack(_input, dim=0)
+            _input = torch.squeeze(_input, dim=1)
+            _input = torch.squeeze(_input, dim=1)
+            _input = torch.reshape(_input, (-1, 8, 8, 5))
+            # _input = torch.unsqueeze(_input, dim=1)
+            # _input = F.interpolate(_input, size=(136, 136), mode='bilinear')  # (1,1,136,136)
+            _input = _input.permute(0, 3, 2, 1)
             batch_data['input_' + mod] = _input
         else:
             _input = [np.array(sample['input_' + mod]) for sample in batch]
